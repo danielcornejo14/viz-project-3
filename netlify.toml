@@ -1,2 +1,7 @@
 [functions]
   external_node_modules = ["jsdom"]
+
+[[headers]]
+  for = "/data"
+  [headers.values]
+    access-control-allow-origin = "*"
