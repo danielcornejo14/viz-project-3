@@ -25,6 +25,7 @@ export const handler: Handler = async (event, context) => {
 
   const simulationNodes = simulation.nodes().map((node: any) => ({
     id: node.id,
+    name: node.attributes.label,
     x: node.x,
     y: node.y
   }));

@@ -8,13 +8,18 @@ interface Node {
   y: number;
 }
 
+interface Link {
+  source: string;
+  target: string;
+}
+
 const DiseasesSimulation: React.FC = () => {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       const response = await fetch('https://viz-project-3.netlify.app/.netlify/functions/diseases-simulation'); // Adjust this URL to your Netlify function URL if needed
-      const nodes: Node[] = await response.json();
+      const { nodes, links }: { nodes: Node[]; links: Link[] } = await response.json();
       if (svgRef.current) {
         d3.select(svgRef.current).selectAll('*').remove();
         const svg = d3.select(svgRef.current);
@@ -22,6 +27,8 @@ const DiseasesSimulation: React.FC = () => {
         const height = 1000;
 
         svg.attr('width', width).attr('height', height);
+        console.log("nodes:", nodes)
+        console.log("links:", links)
         const group = svg.append('g');
         console.log(nodes)
         group.selectAll('circle')
