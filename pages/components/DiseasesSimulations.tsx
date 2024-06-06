@@ -13,18 +13,18 @@ const DiseasesSimulation: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      
-      const response = await fetch('https://viz-project-3.netlify.app/data/diseases.json'); // Adjust this URL to your Netlify function URL if needed
+      const response = await fetch('https://viz-project-3.netlify.app/.netlify/functions/diseases-simulation'); // Adjust this URL to your Netlify function URL if needed
       const nodes: Node[] = await response.json();
-      console.log(nodes)
       if (svgRef.current) {
+        d3.select(svgRef.current).selectAll('*').remove();
         const svg = d3.select(svgRef.current);
         const width = 1000;
         const height = 1000;
 
         svg.attr('width', width).attr('height', height);
-
-        svg.selectAll('circle')
+        const group = svg.append('g');
+        console.log(nodes)
+        group.selectAll('circle')
           .data(nodes)
           .enter()
           .append('circle')
