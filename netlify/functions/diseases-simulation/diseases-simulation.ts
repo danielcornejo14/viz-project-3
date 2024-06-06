@@ -5,12 +5,14 @@ export const handler: Handler = async (event, context) => {
   const docResponse = await fetch(process.env.URL + '/data/diseases.json')
   const data = await docResponse.json()
 
-  const nodes = data.nodes.map((node: any) => ({
+  const nodes = data.nodes
+  .map((node: any) => ({
     id: node.key,
     ...node.attributes
   }));
 
-  const links = data.edges.map((edge: any) => ({
+  const links = data.edges
+  .map((edge: any) => ({
     source: edge.source,
     target: edge.target
   }));
@@ -25,7 +27,7 @@ export const handler: Handler = async (event, context) => {
 
   const simulationNodes = simulation.nodes().map((node: any) => ({
     id: node.id,
-    name: node.attributes.label,
+    name: node.label,
     x: node.x,
     y: node.y
   }));

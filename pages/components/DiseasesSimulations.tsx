@@ -4,6 +4,7 @@ import * as d3 from 'd3';
 
 interface Node {
   id: string;
+  name: string;
   x: number;
   y: number;
 }
