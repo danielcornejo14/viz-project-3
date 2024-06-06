@@ -50,6 +50,32 @@ const DiseasesSimulation: React.FC = () => {
           .attr('cy', d => d.y)
           .attr('r', 5)
           .attr('fill', 'steelblue');
+        // Add zoom and pan functionality
+        const zoom = d3.zoom()
+          .scaleExtent([0.1, 4])
+          .on('zoom', (event) => {
+            group.attr('transform', event.transform);
+          });
+
+        svg.call(zoom);
+
+        // Add brush functionality
+        const brush = d3.brush()
+          .extent([[0, 0], [width, height]])
+          .on('start brush', (event) => {
+            const selection = event.selection;
+            if (selection) {
+              const [[x0, y0], [x1, y1]] = selection;
+              node.classed('selected', (d: any) => {
+                return x0 <= d.x && d.x <= x1 && y0 <= d.y && d.y <= y1;
+              });
+            }
+          });
+
+        svg.append('g')
+          .attr('class', 'brush')
+          .call(brush);
+
       }
 
 

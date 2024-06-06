@@ -23,7 +23,7 @@ export const handler: Handler = async (event, context) => {
     .force('center', d3.forceCenter(500, 500))
     .stop();
 
-  for (let i = 0; i < 1000; ++i) simulation.tick();
+  for (let i = 0; i < 300; ++i) simulation.tick();
 
   const simulationNodes = simulation.nodes().map((node: any) => ({
     id: node.id,
