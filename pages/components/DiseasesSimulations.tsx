@@ -4,7 +4,7 @@ import * as d3 from 'd3';
 
 interface Node {
   id: string;
-  name: string;
+  label: string;
   x: number;
   y: number;
 }
@@ -51,14 +51,17 @@ const DiseasesSimulation: React.FC = () => {
           .attr('r', 5)
           .attr('fill', 'steelblue');
 
-        // Add zoom and pan functionality
-        const zoom = d3.zoom<SVGSVGElement, unknown>()
-          .scaleExtent([0.1, 4])
-          .on('zoom', (event) => {
-            group.attr('transform', event.transform);
-          });
-
-        svg.call(zoom);
+        // Add node labels (initially hidden)
+        const labels = group.selectAll('text')
+          .data(nodes)
+          .enter()
+          .append('text')
+          .text(d => d.label)
+          .attr('x', d => d.x + 8) // Slightly offset from the node
+          .attr('y', d => d.y + 3)
+          .attr('font-size', '10px')
+          .attr('stroke', 'white')
+          .attr('visibility', 'hidden');
 
         // Add brush functionality
         const brush = d3.brush()
@@ -68,8 +71,19 @@ const DiseasesSimulation: React.FC = () => {
             if (selection) {
               const [[x0, y0], [x1, y1]] = selection;
               node.classed('selected', (d: any) => {
-                return x0 <= d.x && d.x <= x1 && y0 <= d.y && d.y <= y1;
+                const isSelected = x0 <= d.x && d.x <= x1 && y0 <= d.y && d.y <= y1;
+                labels.filter((l: any) => l.id === d.id)
+                  .attr('visibility', isSelected ? 'visible' : 'hidden');
+                return isSelected;
               });
+
+            } else {
+              labels.attr('visibility', 'hidden');
+            }
+          })
+          .on('end', (event) => {
+            if (!event.selection) {
+              labels.attr('visibility', 'hidden');
             }
           });
 
@@ -77,8 +91,6 @@ const DiseasesSimulation: React.FC = () => {
           .attr('class', 'brush')
           .call(brush);
       }
-
-
     };
 
     fetchData();
