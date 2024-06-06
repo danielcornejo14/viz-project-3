@@ -28,9 +28,19 @@ const DiseasesSimulation: React.FC = () => {
         const height = 1000;
 
         svg.attr('width', width).attr('height', height);
-        console.log("nodes:", nodes)
-        console.log("links:", links)
         const group = svg.append('g');
+
+        group.selectAll('line')
+          .data(links)
+          .enter()
+          .append('line')
+          .attr('x1', d => nodes.find(node => node.id === d.source)?.x || 0)
+          .attr('y1', d => nodes.find(node => node.id === d.source)?.y || 0)
+          .attr('x2', d => nodes.find(node => node.id === d.target)?.x || 0)
+          .attr('y2', d => nodes.find(node => node.id === d.target)?.y || 0)
+          .attr('stroke', '#999')
+          .attr('stroke-width', 2);
+
         console.log(nodes)
         group.selectAll('circle')
           .data(nodes)
@@ -41,6 +51,8 @@ const DiseasesSimulation: React.FC = () => {
           .attr('r', 5)
           .attr('fill', 'steelblue');
       }
+
+
     };
 
     fetchData();
