@@ -41,8 +41,8 @@ const DiseasesSimulation: React.FC = () => {
           .attr('stroke', '#999')
           .attr('stroke-width', 2);
 
-        console.log(nodes)
-        group.selectAll('circle')
+        // Render nodes
+        const node = group.selectAll('circle')
           .data(nodes)
           .enter()
           .append('circle')
@@ -50,8 +50,9 @@ const DiseasesSimulation: React.FC = () => {
           .attr('cy', d => d.y)
           .attr('r', 5)
           .attr('fill', 'steelblue');
+
         // Add zoom and pan functionality
-        const zoom = d3.zoom()
+        const zoom = d3.zoom<SVGSVGElement, unknown>()
           .scaleExtent([0.1, 4])
           .on('zoom', (event) => {
             group.attr('transform', event.transform);
@@ -75,7 +76,6 @@ const DiseasesSimulation: React.FC = () => {
         svg.append('g')
           .attr('class', 'brush')
           .call(brush);
-
       }
 
 
