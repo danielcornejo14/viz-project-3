@@ -1,5 +1,5 @@
-"use client"
-import React, { useEffect, useRef } from 'react';
+"use client";
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 
 interface Node {
@@ -16,6 +16,16 @@ interface Link {
 
 const DiseasesSimulation: React.FC = () => {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const [interactionMode, setInteractionMode] = useState("zoom");
+  const groupRef = useRef<SVGGElement | null>(null);
+
+  const width = 800;
+  const height = 800;
+
+  const [node, setNode] = useState<d3.Selection<SVGCircleElement, Node, SVGGElement, unknown>>();
+  const [labels, setLabels] = useState<d3.Selection<SVGTextElement, Node, SVGGElement, unknown>>();
+
+  const currentTransform = useRef<d3.ZoomTransform>(d3.zoomIdentity);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,12 +34,12 @@ const DiseasesSimulation: React.FC = () => {
       if (svgRef.current) {
         d3.select(svgRef.current).selectAll('*').remove();
         const svg = d3.select(svgRef.current);
-        const width = 1000;
-        const height = 1000;
 
         svg.attr('width', width).attr('height', height);
         const group = svg.append('g');
+        groupRef.current = group.node();
 
+        // Render links
         group.selectAll('line')
           .data(links)
           .enter()
@@ -42,7 +52,7 @@ const DiseasesSimulation: React.FC = () => {
           .attr('stroke-width', 2);
 
         // Render nodes
-        const node = group.selectAll('circle')
+        const newNode = group.selectAll('circle')
           .data(nodes)
           .enter()
           .append('circle')
@@ -51,8 +61,10 @@ const DiseasesSimulation: React.FC = () => {
           .attr('r', 5)
           .attr('fill', 'steelblue');
 
+        setNode(newNode);
+
         // Add node labels (initially hidden)
-        const labels = group.selectAll('text')
+        const newLabels = group.selectAll('text')
           .data(nodes)
           .enter()
           .append('text')
@@ -60,45 +72,77 @@ const DiseasesSimulation: React.FC = () => {
           .attr('x', d => d.x + 8) // Slightly offset from the node
           .attr('y', d => d.y + 3)
           .attr('font-size', '10px')
-          .attr('stroke', 'white')
+          .attr('stroke', 'black')
           .attr('visibility', 'hidden');
 
-        // Add brush functionality
-        const brush = d3.brush()
-          .extent([[0, 0], [width, height]])
-          .on('start brush', (event) => {
-            const selection = event.selection;
-            if (selection) {
-              const [[x0, y0], [x1, y1]] = selection;
-              node.classed('selected', (d: any) => {
-                const isSelected = x0 <= d.x && d.x <= x1 && y0 <= d.y && d.y <= y1;
-                labels.filter((l: any) => l.id === d.id)
-                  .attr('visibility', isSelected ? 'visible' : 'hidden');
-                return isSelected;
-              });
-
-            } else {
-              labels.attr('visibility', 'hidden');
-            }
-          })
-          .on('end', (event) => {
-            if (!event.selection) {
-              labels.attr('visibility', 'hidden');
-            }
-          });
-
-        svg.append('g')
-          .attr('class', 'brush')
-          .call(brush);
+        setLabels(newLabels);
       }
     };
 
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (!svgRef.current || !groupRef.current || !node || !labels) return;
+
+    const svg = d3.select(svgRef.current);
+    const group = d3.select(groupRef.current);
+    svg.on('.zoom', null); // Clear any previous zoom event listeners
+    svg.on('.brush', null); // Clear any previous brush event listeners
+    svg.select('.brush').remove(); // Remove previous brush group if any
+
+    if (interactionMode === 'zoom') {
+      // Define the zoom behavior
+      const zoom = d3.zoom<SVGSVGElement, unknown>()
+        .scaleExtent([0.1, 4]) // Set the zoom scale extent
+        .on('zoom', (event) => {
+          group.attr('transform', event.transform);
+          currentTransform.current = event.transform;
+        });
+
+      // Apply the zoom behavior to the SVG element
+      svg.call(zoom);
+    } else if (interactionMode === 'brush') {
+      // Define the brush behavior
+      const brush = d3.brush()
+        .extent([[0, 0], [width, height]])
+        .on('start brush', (event) => {
+          const selection = event.selection;
+          if (selection) {
+            const [[x0, y0], [x1, y1]] = selection;
+            const [[tx0, ty0], [tx1, ty1]] = [
+              [currentTransform.current.invertX(x0), currentTransform.current.invertY(y0)],
+              [currentTransform.current.invertX(x1), currentTransform.current.invertY(y1)]
+            ];
+            node.classed('selected', (d: any) => {
+              const isSelected = tx0 <= d.x && d.x <= tx1 && ty0 <= d.y && d.y <= ty1;
+              labels.filter((l: any) => l.id === d.id)
+                .attr('visibility', isSelected ? 'visible' : 'hidden');
+              return isSelected;
+            });
+          } else {
+            labels.attr('visibility', 'hidden');
+          }
+        })
+        .on('end', (event) => {
+          if (!event.selection) {
+            labels.attr('visibility', 'hidden');
+          }
+        });
+
+      svg.append('g')
+        .attr('class', 'brush')
+        .call(brush);
+    }
+  }, [interactionMode, node, labels]);
+
   return (
     <div>
       <h1>Disease Graph</h1>
+      <select onChange={(e) => setInteractionMode(e.target.value)} value={interactionMode}>
+        <option value="zoom">Zoom</option>
+        <option value="brush">Brush</option>
+      </select>
       <svg ref={svgRef}></svg>
     </div>
   );
